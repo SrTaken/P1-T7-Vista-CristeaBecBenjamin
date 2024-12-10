@@ -27,12 +27,14 @@ import org.milaifontanals.club.Usuari;
  */
 public class LoginWindow extends JFrame {
     private IClubOracleBD gBD;
+    private Usuari user;
+
     public LoginWindow(IClubOracleBD gBD) {
         this.gBD = gBD;
         setTitle("Iniciar Sessió");
         setSize(300, 200);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null); 
+        setLocationRelativeTo(null);
 
         JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -49,28 +51,44 @@ public class LoginWindow extends JFrame {
         panel.add(txtUsuario);
         panel.add(lblPassword);
         panel.add(txtPassword);
-        panel.add(new JLabel()); 
+        panel.add(new JLabel());
         panel.add(btnLogin);
 
         add(panel);
-    
+
         btnLogin.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String usuario = txtUsuario.getText();
                 String password = Usuari.cifratePassword(new String(txtPassword.getPassword()));
-                //System.out.println(password); 
+
                 try {
                     if (gBD.validarLogin(usuario, password)) {
-                        JOptionPane.showMessageDialog(LoginWindow.this, "Benvingut/da " + usuario + "!", "Login Correcte", JOptionPane.INFORMATION_MESSAGE);
-                        dispose();
+                        user = gBD.getUsuari(usuario);
+                        JOptionPane.showMessageDialog(LoginWindow.this, "Benvingut/da " + user.getNom() + "!", "Login Correcte", JOptionPane.INFORMATION_MESSAGE);
+                        dispose(); 
+                        
+                        MainMenu mm = new MainMenu(gBD);
                     } else {
                         JOptionPane.showMessageDialog(LoginWindow.this, "Usuari o contrasenya incorrectes!", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 } catch (GestorBDClub ex) {
-                    JOptionPane.showMessageDialog(LoginWindow.this, "Error Inesperat", "Error", JOptionPane.ERROR_MESSAGE);
+                    infoError(ex);
+                    JOptionPane.showMessageDialog(LoginWindow.this, "Error Inesperat: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
+    }
+
+    public Usuari getUser() {
+        return user;
+    }
+    private static void infoError(Throwable aux) {
+        do {
+            if (aux.getMessage() != null) {
+                System.out.println("\t" + aux.getMessage());
+            }
+            aux = aux.getCause();
+        } while (aux != null);
     }
 }
