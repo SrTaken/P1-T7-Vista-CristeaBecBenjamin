@@ -22,15 +22,14 @@ public class MainMenu extends JFrame {
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
         
-
-        
         JPanel welcomePanel = crearWelcomePanel();
-        contentPanel.add(welcomePanel, "welcome");
-        
         JPanel equipsPanel = new EquipsWindow(gBD);
-        contentPanel.add(equipsPanel, "equips");
-        
+        JPanel temporadesPanel = new TempWindow(gBD);
         JPanel jugadorsPanel = new JugadorsPanel(gBD);
+        
+        contentPanel.add(welcomePanel, "welcome");
+        contentPanel.add(equipsPanel, "equips");
+        contentPanel.add(temporadesPanel, "temporades");
         contentPanel.add(jugadorsPanel, "jugadors");
         
         setLayout(new BorderLayout());
@@ -67,7 +66,7 @@ public class MainMenu extends JFrame {
         sideMenu.add(btnTemp);
         sideMenu.add(btnCategoria);
         sideMenu.add(btnUsuari);
-        sideMenu.add(new JLabel()); // Espacio en blanco como el view en android
+        sideMenu.add(new JLabel());
         sideMenu.add(btnSortir);
 
         
@@ -76,10 +75,10 @@ public class MainMenu extends JFrame {
 
         btnEquips.addActionListener(e -> cardLayout.show(contentPanel, "equips"));
         btnJugadors.addActionListener(e -> cardLayout.show(contentPanel, "jugadors"));
-        btnTemp.addActionListener(e -> mostrarContenido(contentPanel, "Gestió de Partits"));
+        btnTemp.addActionListener(e -> cardLayout.show(contentPanel, "temporades"));
         btnCategoria.addActionListener(e -> mostrarContenido(contentPanel, "Estadístiques"));
         btnUsuari.addActionListener(e -> mostrarContenido(contentPanel, "Configuració"));
-        btnSortir.addActionListener(e -> System.exit(0)); 
+        btnSortir.addActionListener(e -> System.exit(0));
     }
 
     private JButton crearBoton(String text) {
