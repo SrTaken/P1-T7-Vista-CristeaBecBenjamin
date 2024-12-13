@@ -5,16 +5,31 @@ import javax.swing.*;
 import org.milaifontanals.club.IClubOracleBD;
 
 public class MainMenu extends JFrame {
+    private IClubOracleBD gBD;
+    private JPanel contentPanel;
+    private CardLayout cardLayout;
+    
     public MainMenu(IClubOracleBD gBD) {
+        this.gBD = gBD;
         setTitle("Menú Principal");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setExtendedState(Frame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
-
         
         UIManager.put("Button.font", new Font("SansSerif", Font.BOLD, 14));
         UIManager.put("Panel.background", Color.LIGHT_GRAY);
 
+        cardLayout = new CardLayout();
+        contentPanel = new JPanel(cardLayout);
+        
+
+        
+        JPanel welcomePanel = crearWelcomePanel();
+        contentPanel.add(welcomePanel, "welcome");
+        
+        JPanel equipsPanel = new EquipsWindow(gBD);
+        contentPanel.add(equipsPanel, "equips");
+        
         setLayout(new BorderLayout());
 
         sidePanel();
@@ -22,6 +37,15 @@ public class MainMenu extends JFrame {
         setVisible(true);
     }
 
+    private JPanel crearWelcomePanel() {
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BorderLayout());
+        JLabel lblWelcome = new JLabel("Benvingut/da al gestor de clubs esportius del gran Benjamin Cristea!", SwingConstants.CENTER);
+        lblWelcome.setFont(new Font("SansSerif", Font.BOLD, 24));
+        contentPanel.add(lblWelcome, BorderLayout.CENTER);
+        return contentPanel;
+    }
+    
     private void sidePanel() {
         JPanel sideMenu = new JPanel();
         sideMenu.setLayout(new GridLayout(0, 1, 5, 5));
@@ -43,16 +67,11 @@ public class MainMenu extends JFrame {
         sideMenu.add(new JLabel()); // Espacio en blanco como el view en android
         sideMenu.add(btnSortir);
 
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new BorderLayout());
-        JLabel lblWelcome = new JLabel("Benvingut/da al gestor de clubs esportius del gran Benjamin Cristea!", SwingConstants.CENTER);
-        lblWelcome.setFont(new Font("SansSerif", Font.BOLD, 24));
-        contentPanel.add(lblWelcome, BorderLayout.CENTER);
-   
+        
         add(sideMenu, BorderLayout.WEST);
         add(contentPanel, BorderLayout.CENTER);
 
-        btnEquips.addActionListener(e -> mostrarContenido(contentPanel, "Gestió d'Equips"));
+        btnEquips.addActionListener(e -> cardLayout.show(contentPanel, "equips"));
         btnJugadors.addActionListener(e -> mostrarContenido(contentPanel, "Gestió de Jugadors"));
         btnTemp.addActionListener(e -> mostrarContenido(contentPanel, "Gestió de Partits"));
         btnCategoria.addActionListener(e -> mostrarContenido(contentPanel, "Estadístiques"));
@@ -78,4 +97,6 @@ public class MainMenu extends JFrame {
         contentPanel.revalidate();
         contentPanel.repaint();
     }
+
+    
 }

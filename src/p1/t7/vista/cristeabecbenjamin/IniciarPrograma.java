@@ -31,7 +31,7 @@ public class IniciarPrograma {
             UIManager.setLookAndFeel(new FlatIntelliJLaf());
         } catch (UnsupportedLookAndFeelException ex) {
             System.out.println("Error al carregar THEME");
-       }
+        }
                 
         JFrame frame = new JFrame("Gestor de Connexió");
         frame.setSize(400, 200);
