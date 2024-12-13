@@ -30,6 +30,9 @@ public class MainMenu extends JFrame {
         JPanel equipsPanel = new EquipsWindow(gBD);
         contentPanel.add(equipsPanel, "equips");
         
+        JPanel jugadorsPanel = new JugadorsPanel(gBD);
+        contentPanel.add(jugadorsPanel, "jugadors");
+        
         setLayout(new BorderLayout());
 
         sidePanel();
@@ -72,7 +75,7 @@ public class MainMenu extends JFrame {
         add(contentPanel, BorderLayout.CENTER);
 
         btnEquips.addActionListener(e -> cardLayout.show(contentPanel, "equips"));
-        btnJugadors.addActionListener(e -> mostrarContenido(contentPanel, "Gestió de Jugadors"));
+        btnJugadors.addActionListener(e -> cardLayout.show(contentPanel, "jugadors"));
         btnTemp.addActionListener(e -> mostrarContenido(contentPanel, "Gestió de Partits"));
         btnCategoria.addActionListener(e -> mostrarContenido(contentPanel, "Estadístiques"));
         btnUsuari.addActionListener(e -> mostrarContenido(contentPanel, "Configuració"));

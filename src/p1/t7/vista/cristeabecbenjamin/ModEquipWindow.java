@@ -15,8 +15,8 @@ public class ModEquipWindow extends JPanel {
     private JComboBox<Categoria> cmbCategoria;
     private JComboBox<Temporada> cmbTemporada;
     private ButtonGroup tipusGroup;
-    private JPanel parentContainer; // Contenedor principal
-    private String mainPanelName;  // Nombre del panel principal
+    private JPanel parentContainer; 
+    private String mainPanelName;  
     
     private Equip selectedEquip;
 
@@ -37,7 +37,7 @@ public class ModEquipWindow extends JPanel {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Nombre del equipo
+        
         JLabel lblNom = new JLabel("Nom de l'equip:");
         txtNom = new JTextField(20);
         originalBackgroundColor = txtNom.getBackground();
@@ -49,7 +49,7 @@ public class ModEquipWindow extends JPanel {
         gbc.gridx = 1;
         inputPanel.add(txtNom, gbc);
 
-        // Radiobuttons para el enum Tipus
+        
         JLabel lblTipus = new JLabel("Tipus de l'equip:");
         gbc.gridx = 0;
         gbc.gridy = 1;
@@ -69,7 +69,7 @@ public class ModEquipWindow extends JPanel {
         gbc.gridx = 1;
         inputPanel.add(tipusPanel, gbc);
 
-        // ComboBox para categoría
+        
         JLabel lblCategoria = new JLabel("Categoria:");
         cmbCategoria = new JComboBox<>();
         carregarCategorias(gBD);
@@ -80,7 +80,7 @@ public class ModEquipWindow extends JPanel {
         gbc.gridx = 1;
         inputPanel.add(cmbCategoria, gbc);
 
-        // ComboBox para temporada
+        
         JLabel lblTemporada = new JLabel("Temporada:");
         cmbTemporada = new JComboBox<>();
         carregarTemporadas(gBD);
