@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Enumeration;
 import java.util.List;
+import javax.swing.border.TitledBorder;
 import org.milaifontanals.club.IClubOracleBD;
 import org.milaifontanals.club.Categoria;
 import org.milaifontanals.club.Equip;
@@ -21,7 +22,7 @@ public class ModEquipWindow extends JPanel {
     private Equip selectedEquip;
 
     private List<Temporada> temporadas;
-    
+
     private Color originalBackgroundColor;
 
     public ModEquipWindow(IClubOracleBD gBD, JPanel parentContainer, String mainPanelName, Equip selectedEquip) {
@@ -29,85 +30,111 @@ public class ModEquipWindow extends JPanel {
         this.mainPanelName = mainPanelName;
         this.selectedEquip = selectedEquip;
         
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new GridBagLayout());
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
+        JPanel containerPanel = new JPanel(new BorderLayout(10, 10));
+        containerPanel.setPreferredSize(new Dimension(500, 400));
+
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createEtchedBorder(),
+            selectedEquip == null ? "Nou Equip" : "Modificar Equip",
+            TitledBorder.LEFT,
+            TitledBorder.TOP
+        ));
+
         JPanel inputPanel = new JPanel(new GridBagLayout());
+        inputPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
 
-        
         JLabel lblNom = new JLabel("Nom de l'equip:");
         txtNom = new JTextField(20);
+        txtNom.setPreferredSize(new Dimension(150, 25));
         originalBackgroundColor = txtNom.getBackground();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST;
+        
+        gbc.gridx = 0; gbc.gridy = 0;
         inputPanel.add(lblNom, gbc);
-
+        
         gbc.gridx = 1;
+        gbc.weightx = 1.0;
         inputPanel.add(txtNom, gbc);
 
-        
-        JLabel lblTipus = new JLabel("Tipus de l'equip:");
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        inputPanel.add(lblTipus, gbc);
-
-        JPanel tipusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel tipusPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        tipusPanel.setBorder(BorderFactory.createTitledBorder("Tipus de l'equip"));
         tipusGroup = new ButtonGroup();
 
         for (Tipus tipus : Tipus.values()) {
             JRadioButton radioButton = new JRadioButton(tipus.getDisplayName());
-            if(selectedEquip != null)
-                radioButton.setEnabled(false);
+            radioButton.setFont(new Font("SansSerif", Font.PLAIN, 12));
             tipusGroup.add(radioButton);
             tipusPanel.add(radioButton);
         }
 
-        gbc.gridx = 1;
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridwidth = 2;
         inputPanel.add(tipusPanel, gbc);
+        gbc.gridwidth = 1;
 
-        
         JLabel lblCategoria = new JLabel("Categoria:");
         cmbCategoria = new JComboBox<>();
+        cmbCategoria.setPreferredSize(new Dimension(150, 25));
         carregarCategorias(gBD);
-        gbc.gridx = 0;
-        gbc.gridy = 2;
+        
+        gbc.gridx = 0; gbc.gridy = 2;
         inputPanel.add(lblCategoria, gbc);
-
+        
         gbc.gridx = 1;
         inputPanel.add(cmbCategoria, gbc);
 
-        
         JLabel lblTemporada = new JLabel("Temporada:");
         cmbTemporada = new JComboBox<>();
+        cmbTemporada.setPreferredSize(new Dimension(150, 25));
         carregarTemporadas(gBD);
-        gbc.gridx = 0;
-        gbc.gridy = 3;
+        
+        gbc.gridx = 0; gbc.gridy = 3;
         inputPanel.add(lblTemporada, gbc);
-
+        
         gbc.gridx = 1;
         inputPanel.add(cmbTemporada, gbc);
-        
-        
-        
 
-        add(inputPanel, BorderLayout.CENTER);
+        mainPanel.add(inputPanel, BorderLayout.CENTER);
+        containerPanel.add(mainPanel, BorderLayout.CENTER);
 
-        
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         JButton btnGuardar = new JButton("Guardar");
         JButton btnCancelar = new JButton("Cancelar");
-        
+        JButton btnMembres = new JButton("Gestionar Membres");
+
+        btnGuardar.setPreferredSize(new Dimension(90, 30));
+        btnCancelar.setPreferredSize(new Dimension(90, 30));
+        btnMembres.setPreferredSize(new Dimension(130, 30));
+        btnMembres.setEnabled(selectedEquip != null); 
+
         btnGuardar.addActionListener(e -> {
             guardarEquip(gBD); 
-            
+            volverAlPanelPrincipal();
+        });
+        btnCancelar.addActionListener(e -> volverAlPanelPrincipal());
+        btnMembres.addActionListener(e -> {
+            MemberPanel memberPanel = new MemberPanel(gBD, selectedEquip);
+            JDialog dialog = new JDialog((Frame)SwingUtilities.getWindowAncestor(this), "Gestió de Membres", true);
+            dialog.setContentPane(memberPanel);
+            dialog.pack();
+            dialog.setLocationRelativeTo(this);
+            dialog.setVisible(true);
         });
 
-        btnCancelar.addActionListener(e -> volverAlPanelPrincipal());
-        
+        buttonPanel.add(btnGuardar);
+        buttonPanel.add(btnCancelar);
+        buttonPanel.add(btnMembres);
+        containerPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        add(containerPanel);
+
         //Load equip
         if (selectedEquip != null) {
             txtNom.setText(selectedEquip.getNom());
@@ -123,8 +150,7 @@ public class ModEquipWindow extends JPanel {
 
             Categoria categoriaSeleccionada = selectedEquip.getCategoria();
             for (int i = 0; i < cmbCategoria.getItemCount(); i++) {
-                Categoria cat = cmbCategoria.getItemAt(i);
-                if (cat.getId() == categoriaSeleccionada.getId()) {
+                if (cmbCategoria.getItemAt(i).equals(categoriaSeleccionada)) {
                     cmbCategoria.setSelectedIndex(i);
                     break;
                 }
@@ -132,28 +158,30 @@ public class ModEquipWindow extends JPanel {
 
             Temporada temporadaSeleccionada = selectedEquip.getTemporada();
             for (int i = 0; i < cmbTemporada.getItemCount(); i++) {
-                Temporada temp = cmbTemporada.getItemAt(i);
-                if (temp.getYear()== temporadaSeleccionada.getYear()) {
+                if (cmbTemporada.getItemAt(i).equals(temporadaSeleccionada)) {
                     cmbTemporada.setSelectedIndex(i);
                     break;
                 }
             }
-            cmbTemporada.setEnabled(false);
-            cmbCategoria.setEnabled(false);
 
         }
 
-        buttonPanel.add(btnGuardar);
-        buttonPanel.add(btnCancelar);
-
-        add(buttonPanel, BorderLayout.SOUTH);
-        
         txtNom.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override
             public void keyTyped(java.awt.event.KeyEvent evt) {
                 txtNom.setBackground(originalBackgroundColor);
             }
         });
+    }
+
+    private JButton createStyledButton(String text, Color bgColor) {
+        JButton button = new JButton(text);
+        button.setPreferredSize(new Dimension(90, 30));
+        button.setBackground(bgColor);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        return button;
     }
 
     private void carregarCategorias(IClubOracleBD gBD) {
@@ -179,43 +207,35 @@ public class ModEquipWindow extends JPanel {
     }
 
     private void guardarEquip(IClubOracleBD gBD) {
-        String nom = txtNom.getText().trim();
-
-        if (nom.isEmpty()) {
-            txtNom.setBackground(new Color(255, 200, 200));
-            JOptionPane.showMessageDialog(this, 
-                "El nom de l'equip és obligatori", 
-                "Error de validació", 
-                JOptionPane.WARNING_MESSAGE);
-            txtNom.requestFocus();
-        }else{
-            try{
-
-                txtNom.setBackground(originalBackgroundColor);
-
-                Tipus t = obtenerTipusSeleccionado();
-                Categoria c = (Categoria) cmbCategoria.getSelectedItem();
-                Temporada temp = (Temporada) cmbTemporada.getSelectedItem();
-
-
-                //System.out.println(e);
-                if(selectedEquip == null){
-                    Equip e = new Equip(nom, t, c, temp);
-                    gBD.afegirEquip(e);
-                } else {
-                    selectedEquip.setNom(nom);
-                    gBD.modificarEquip(selectedEquip);
-                }
-                gBD.confirmarCanvis();
-
-                JOptionPane.showMessageDialog(this, "Equip guardat correctament!", "Èxit", JOptionPane.INFORMATION_MESSAGE);
-                volverAlPanelPrincipal();
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error al guardar l'equip: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                infoError(ex);
-            }
-        }
+        try {
+            String nom = txtNom.getText().trim();
             
+            if (nom.isEmpty()) {
+                txtNom.setBackground(new Color(255, 200, 200));
+                JOptionPane.showMessageDialog(this, 
+                    "El nom de l'equip és obligatori", 
+                    "Error de validació", 
+                    JOptionPane.WARNING_MESSAGE);
+                txtNom.requestFocus();
+                return;
+            }
+            
+            txtNom.setBackground(originalBackgroundColor);
+            
+            Tipus t = obtenerTipusSeleccionado();
+            Categoria c = (Categoria) cmbCategoria.getSelectedItem();
+            Temporada temp = (Temporada) cmbTemporada.getSelectedItem();
+            
+            Equip e = new Equip(nom, t, c, temp);
+            gBD.afegirEquip(e);
+            gBD.confirmarCanvis();
+                    
+            JOptionPane.showMessageDialog(this, "Equip guardat correctament!", "Èxit", JOptionPane.INFORMATION_MESSAGE);
+            volverAlPanelPrincipal();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al guardar l'equip: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            infoError(ex);
+        }
     }
     private static void infoError(Throwable aux) {
         do {
@@ -240,5 +260,4 @@ public class ModEquipWindow extends JPanel {
         }
         return null; 
     }
-
 }

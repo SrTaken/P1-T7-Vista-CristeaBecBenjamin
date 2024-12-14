@@ -236,4 +236,5 @@ public class EquipsWindow extends JPanel {
             aux = aux.getCause();
         } while (aux != null);
     }
+    
 }
