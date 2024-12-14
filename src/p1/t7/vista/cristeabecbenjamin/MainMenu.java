@@ -3,14 +3,19 @@ package p1.t7.vista.cristeabecbenjamin;
 import java.awt.*;
 import javax.swing.*;
 import org.milaifontanals.club.IClubOracleBD;
+import org.milaifontanals.club.Usuari;
 
 public class MainMenu extends JFrame {
     private IClubOracleBD gBD;
     private JPanel contentPanel;
     private CardLayout cardLayout;
+    private JPanel exportPanel;
+    private UsuariPanel usuariPanel;
+    private Usuari currentUser;
     
-    public MainMenu(IClubOracleBD gBD) {
+    public MainMenu(IClubOracleBD gBD, Usuari user) {
         this.gBD = gBD;
+        this.currentUser = user;
         setTitle("Menú Principal");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setExtendedState(Frame.MAXIMIZED_BOTH);
@@ -26,11 +31,16 @@ public class MainMenu extends JFrame {
         JPanel equipsPanel = new EquipsWindow(gBD);
         JPanel temporadesPanel = new TempWindow(gBD);
         JPanel jugadorsPanel = new JugadorsPanel(gBD);
+        exportPanel = new ExportPanel(gBD);
+        usuariPanel = new UsuariPanel(gBD);
+        usuariPanel.setCurrentUser(currentUser);
         
         contentPanel.add(welcomePanel, "welcome");
         contentPanel.add(equipsPanel, "equips");
         contentPanel.add(temporadesPanel, "temporades");
         contentPanel.add(jugadorsPanel, "jugadors");
+        contentPanel.add(exportPanel, "export");
+        contentPanel.add(usuariPanel, "usuari");
         
         setLayout(new BorderLayout());
 
@@ -59,6 +69,7 @@ public class MainMenu extends JFrame {
         JButton btnTemp = crearBoton("Temporada");
         JButton btnCategoria = crearBoton("Categoria");
         JButton btnUsuari = crearBoton("Usuari");
+        JButton btnExport = crearBoton("Exportar");
         JButton btnSortir = crearBoton("Sortir");
 
         sideMenu.add(btnEquips);
@@ -66,6 +77,7 @@ public class MainMenu extends JFrame {
         sideMenu.add(btnTemp);
         sideMenu.add(btnCategoria);
         sideMenu.add(btnUsuari);
+        sideMenu.add(btnExport);
         sideMenu.add(new JLabel());
         sideMenu.add(btnSortir);
 
@@ -77,7 +89,8 @@ public class MainMenu extends JFrame {
         btnJugadors.addActionListener(e -> cardLayout.show(contentPanel, "jugadors"));
         btnTemp.addActionListener(e -> cardLayout.show(contentPanel, "temporades"));
         btnCategoria.addActionListener(e -> mostrarContenido(contentPanel, "Estadístiques"));
-        btnUsuari.addActionListener(e -> mostrarContenido(contentPanel, "Configuració"));
+        btnUsuari.addActionListener(e -> cardLayout.show(contentPanel, "usuari"));
+        btnExport.addActionListener(e -> cardLayout.show(contentPanel, "export"));
         btnSortir.addActionListener(e -> System.exit(0));
     }
 

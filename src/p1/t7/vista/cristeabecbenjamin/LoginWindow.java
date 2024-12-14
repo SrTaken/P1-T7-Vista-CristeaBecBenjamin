@@ -68,7 +68,7 @@ public class LoginWindow extends JFrame {
                         JOptionPane.showMessageDialog(LoginWindow.this, "Benvingut/da " + user.getNom() + "!", "Login Correcte", JOptionPane.INFORMATION_MESSAGE);
                         dispose(); 
                         
-                        MainMenu mm = new MainMenu(gBD);
+                        MainMenu mm = new MainMenu(gBD, user);
                     } else {
                         JOptionPane.showMessageDialog(LoginWindow.this, "Usuari o contrasenya incorrectes!", "Error", JOptionPane.ERROR_MESSAGE);
                     }
