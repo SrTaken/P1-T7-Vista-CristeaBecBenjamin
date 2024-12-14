@@ -26,12 +26,10 @@ public class UsuariPanel extends JPanel {
     private void setupUI() {
         setLayout(new BorderLayout());
         
-        // Panel principal con GridBagLayout para mejor control del espacio
         JPanel mainPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         
-        // Panel para los campos de datos
         JPanel dataPanel = new JPanel(new GridBagLayout());
         dataPanel.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createEtchedBorder(), 
@@ -39,12 +37,10 @@ public class UsuariPanel extends JPanel {
             TitledBorder.LEFT,
             TitledBorder.TOP));
         
-        // Crear componentes
         txtLogin = new JTextField(20);
         txtNom = new JTextField(20);
         txtPassword = new JPasswordField(20);
         
-        // Login (no editable)
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.EAST;
         dataPanel.add(new JLabel("Login:"), gbc);
@@ -54,7 +50,6 @@ public class UsuariPanel extends JPanel {
         txtLogin.setEditable(false);
         dataPanel.add(txtLogin, gbc);
         
-        // Nombre
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.anchor = GridBagConstraints.EAST;
         dataPanel.add(new JLabel("Nom:"), gbc);
@@ -63,7 +58,6 @@ public class UsuariPanel extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
         dataPanel.add(txtNom, gbc);
         
-        // Contraseña
         gbc.gridx = 0; gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.EAST;
         dataPanel.add(new JLabel("Contrasenya:"), gbc);
@@ -72,7 +66,6 @@ public class UsuariPanel extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
         dataPanel.add(txtPassword, gbc);
         
-        // Panel de botones
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         btnGuardar = new JButton("Guardar");
         btnEliminar = new JButton("Eliminar");
@@ -86,7 +79,6 @@ public class UsuariPanel extends JPanel {
         buttonPanel.add(btnEliminar);
         buttonPanel.add(btnNou);
         
-        // Añadir paneles al panel principal
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1.0; gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
@@ -98,7 +90,6 @@ public class UsuariPanel extends JPanel {
         
         add(mainPanel, BorderLayout.CENTER);
         
-        // Configurar acciones de los botones
         setupActions();
     }
     
@@ -121,13 +112,12 @@ public class UsuariPanel extends JPanel {
         if (user != null) {
             txtLogin.setText(user.getLogin());
             txtNom.setText(user.getNom());
-            txtPassword.setText(""); // Por seguridad no mostramos la contraseña
+            txtPassword.setText(""); 
             btnEliminar.setEnabled(true);
         }
     }
     
     private void guardarUsuari() {
-        // Para usuario nuevo, todos los campos son obligatorios
         if (currentUser == null) {
             if (txtLogin.getText().trim().isEmpty() || 
                 txtNom.getText().trim().isEmpty() || 
@@ -140,7 +130,6 @@ public class UsuariPanel extends JPanel {
                 return;
             }
         } else {
-            // Para usuario existente, solo el nombre es obligatorio
             if (txtNom.getText().trim().isEmpty()) {
                 JOptionPane.showMessageDialog(this,
                     "El nom és obligatori",
@@ -157,14 +146,11 @@ public class UsuariPanel extends JPanel {
             System.out.println(password);
             
             if (currentUser == null) {
-                // Nuevo usuario - requiere todos los campos
                 Usuari nouUsuari = new Usuari(nom, password, login);
                 gBD.afegirUsuari(nouUsuari);
                 JOptionPane.showMessageDialog(this, "Usuari creat correctament", "Èxit", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                // Usuario existente - actualizar solo lo necesario
                 currentUser.setNom(nom);
-                // Actualizar contraseña solo si se ha introducido una nueva
                 if (!password.trim().isEmpty()) {
                     currentUser.setPassword(password);
                 }
@@ -193,7 +179,7 @@ public class UsuariPanel extends JPanel {
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 gBD.esborrarUsuari(currentUser.getLogin());
-                //gBD.confirmarCanvis();
+                gBD.confirmarCanvis();
                 JOptionPane.showMessageDialog(this, "Usuari eliminat correctament", "Èxit", JOptionPane.INFORMATION_MESSAGE);
                 
                 Container c = this;
