@@ -67,7 +67,6 @@ public class MainMenu extends JFrame {
         JButton btnEquips = crearBoton("Equips");
         JButton btnJugadors = crearBoton("Jugadors");
         JButton btnTemp = crearBoton("Temporada");
-        JButton btnCategoria = crearBoton("Categoria");
         JButton btnUsuari = crearBoton("Usuari");
         JButton btnExport = crearBoton("Exportar");
         JButton btnSortir = crearBoton("Sortir");
@@ -75,7 +74,6 @@ public class MainMenu extends JFrame {
         sideMenu.add(btnEquips);
         sideMenu.add(btnJugadors);
         sideMenu.add(btnTemp);
-        sideMenu.add(btnCategoria);
         sideMenu.add(btnUsuari);
         sideMenu.add(btnExport);
         sideMenu.add(new JLabel());
@@ -88,7 +86,6 @@ public class MainMenu extends JFrame {
         btnEquips.addActionListener(e -> cardLayout.show(contentPanel, "equips"));
         btnJugadors.addActionListener(e -> cardLayout.show(contentPanel, "jugadors"));
         btnTemp.addActionListener(e -> cardLayout.show(contentPanel, "temporades"));
-        btnCategoria.addActionListener(e -> mostrarContenido(contentPanel, "Estadístiques"));
         btnUsuari.addActionListener(e -> cardLayout.show(contentPanel, "usuari"));
         btnExport.addActionListener(e -> cardLayout.show(contentPanel, "export"));
         btnSortir.addActionListener(e -> System.exit(0));

@@ -10,6 +10,7 @@ import org.milaifontanals.club.Categoria;
 import org.milaifontanals.club.Equip;
 import org.milaifontanals.club.Temporada;
 import org.milaifontanals.club.Tipus;
+import java.util.Calendar;
 
 public class ModEquipWindow extends JPanel {
     private JTextField txtNom;
@@ -139,31 +140,33 @@ public class ModEquipWindow extends JPanel {
         if (selectedEquip != null) {
             txtNom.setText(selectedEquip.getNom());
 
-            Tipus tipusSeleccionado = selectedEquip.getTipus();
             for (Enumeration<AbstractButton> buttons = tipusGroup.getElements(); buttons.hasMoreElements();) {
                 AbstractButton button = buttons.nextElement();
-                if (button.getText().equals(tipusSeleccionado.getDisplayName())) {
+                if (button.getText().equals(selectedEquip.getTipus().getDisplayName())) {
                     button.setSelected(true);
-                    break;
                 }
+                button.setEnabled(false);
             }
 
             Categoria categoriaSeleccionada = selectedEquip.getCategoria();
             for (int i = 0; i < cmbCategoria.getItemCount(); i++) {
-                if (cmbCategoria.getItemAt(i).equals(categoriaSeleccionada)) {
+                Categoria cat = cmbCategoria.getItemAt(i);
+                if (cat.getId() == categoriaSeleccionada.getId()) {
                     cmbCategoria.setSelectedIndex(i);
                     break;
                 }
             }
+            cmbCategoria.setEnabled(false);
 
             Temporada temporadaSeleccionada = selectedEquip.getTemporada();
             for (int i = 0; i < cmbTemporada.getItemCount(); i++) {
-                if (cmbTemporada.getItemAt(i).equals(temporadaSeleccionada)) {
+                Temporada temp = cmbTemporada.getItemAt(i);
+                if (temp.getYear() == temporadaSeleccionada.getYear()) {
                     cmbTemporada.setSelectedIndex(i);
                     break;
                 }
             }
-
+            cmbTemporada.setEnabled(false);
         }
 
         txtNom.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -195,11 +198,19 @@ public class ModEquipWindow extends JPanel {
         }
     }
 
+    private int getCurrentYear() {
+        return Calendar.getInstance().get(Calendar.YEAR) % 100;  // Obtiene los ultimos 2 dígitos para que cuadra con los de la BD
+    }
+
     private void carregarTemporadas(IClubOracleBD gBD) {
         try {
             temporadas = gBD.obtenirLlistaTemporada();
+            int currentYear = getCurrentYear();
             for (Temporada temporada : temporadas) {
                 cmbTemporada.addItem(temporada);
+                if (temporada.getYear() == currentYear) {
+                    cmbTemporada.setSelectedItem(temporada);
+                }
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error al carregar les temporades: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -231,6 +242,7 @@ public class ModEquipWindow extends JPanel {
             gBD.confirmarCanvis();
                     
             JOptionPane.showMessageDialog(this, "Equip guardat correctament!", "Èxit", JOptionPane.INFORMATION_MESSAGE);
+            limpiarCampos();
             volverAlPanelPrincipal();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error al guardar l'equip: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -247,6 +259,7 @@ public class ModEquipWindow extends JPanel {
     }
 
     private void volverAlPanelPrincipal() {
+        limpiarCampos();
         CardLayout layout = (CardLayout) parentContainer.getLayout();
         layout.show(parentContainer, mainPanelName);
     }
@@ -259,5 +272,31 @@ public class ModEquipWindow extends JPanel {
             }
         }
         return null; 
+    }
+
+    private void limpiarCampos() {
+        txtNom.setText("");
+        tipusGroup.clearSelection();
+        cmbCategoria.setSelectedIndex(0);
+        
+        int currentYear = getCurrentYear();
+        for (int i = 0; i < cmbTemporada.getItemCount(); i++) {
+            Temporada temp = cmbTemporada.getItemAt(i);
+            if (temp.getYear() == currentYear) {
+                cmbTemporada.setSelectedIndex(i);
+                break;
+            }
+        }
+        
+        txtNom.setBackground(originalBackgroundColor);
+        
+        if (selectedEquip != null) {
+            for (Enumeration<AbstractButton> buttons = tipusGroup.getElements(); buttons.hasMoreElements();) {
+                AbstractButton button = buttons.nextElement();
+                button.setEnabled(true);
+            }
+            cmbCategoria.setEnabled(true);
+            cmbTemporada.setEnabled(true);
+        }
     }
 }

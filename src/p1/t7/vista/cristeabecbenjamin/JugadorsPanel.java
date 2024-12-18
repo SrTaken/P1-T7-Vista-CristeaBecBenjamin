@@ -15,6 +15,8 @@ import java.time.Period;
 import java.util.Date;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class JugadorsPanel extends JPanel {
     private IClubOracleBD gBD;
@@ -31,6 +33,17 @@ public class JugadorsPanel extends JPanel {
     private JComboBox<Categoria> cmbCategoria;
     private JButton btnSortByCognom;
     private JButton btnSortByData;
+    private JPanel tablePanel;
+    private JLabel noJugadorsLabel;
+    private JScrollPane scrollPane;
+    
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+
+    //Esto es para guardar el estado de los filtros
+    private String lastIdFilter = "";
+    private String lastNomFilter = "";
+    private String lastDataFilter = "";
+    private Categoria lastCategoria = null;
 
     public JugadorsPanel(IClubOracleBD gBD) {
         this.gBD = gBD;
@@ -53,7 +66,7 @@ public class JugadorsPanel extends JPanel {
     private JPanel createListPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
 
-        //filtritos
+        // filtritos de locos
         JPanel filterPanel = new JPanel();
         filterPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         filterPanel.setBackground(new Color(230, 230, 230));
@@ -108,22 +121,52 @@ public class JugadorsPanel extends JPanel {
         filterPanel.add(btnSortByCognom);
         filterPanel.add(btnSortByData);
 
-        panel.add(filterPanel, BorderLayout.NORTH);
-
-        String[] columnNames = {"ID Legal", "Nom", "Cognom", "Sexe", "Data Naixement", "Fi Revisió Mèdica"};
-        tableModel = new DefaultTableModel(columnNames, 0);
-        table = new JTable(tableModel);
-
-        table.setPreferredScrollableViewportSize(new Dimension(300, 200));
-        table.setFillsViewportHeight(true);
-        table.setRowHeight(30);
-
-        JScrollPane scrollPane = new JScrollPane(table);
-        panel.add(scrollPane, BorderLayout.CENTER);
-
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setLayout(new BorderLayout());
         buttonPanel.setBackground(new Color(230, 230, 230));
+
+        JPanel leftButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        leftButtonPanel.setBackground(new Color(230, 230, 230));
+        
+        JButton btnReload = new JButton("Recarregar");
+        btnReload.addActionListener(e -> {
+            try {
+                guardarEstadoFiltros();
+                jugadors = gBD.obtenirLlistaJugador();
+                tableModel.setRowCount(0);
+                
+                if (jugadors != null && !jugadors.isEmpty()) {
+                    ocultarMensajeNoJugadors();
+                    for (Jugador jugador : jugadors) {
+                        Object[] rowData = {
+                            jugador.getIdLegal(),
+                            jugador.getNom(), 
+                            jugador.getCognom(),
+                            jugador.getSexe(),
+                            sdf.format(jugador.getData_naix()),
+                            calcularEdad(jugador.getData_naix()),
+                            obtenerCategoria(calcularEdad(jugador.getData_naix())),
+                            jugador.getAny_fi_revisio_medica()
+                        };
+                        tableModel.addRow(rowData);
+                    }
+                    aplicarFiltros();
+                } else {
+                    mostrarMensajeNoJugadors();
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(panel, 
+                    "Error al recarregar els jugadors: " + ex.getMessage(),
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+                infoError(ex);
+            }
+        });
+        
+        leftButtonPanel.add(btnReload);
+
+        JPanel rightButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        rightButtonPanel.setBackground(new Color(230, 230, 230));
 
         JButton btnAdd = new JButton("Afegir Jugador");
         JButton btnEdit = new JButton("Editar Jugador");
@@ -133,11 +176,36 @@ public class JugadorsPanel extends JPanel {
         btnEdit.addActionListener(e -> showModPanel());
         btnDelete.addActionListener(e -> eliminarJugador());
 
-        buttonPanel.add(btnAdd);
-        buttonPanel.add(btnEdit);
-        buttonPanel.add(btnDelete);
+        rightButtonPanel.add(btnAdd);
+        rightButtonPanel.add(btnEdit);
+        rightButtonPanel.add(btnDelete);
+
+        // Añadir los paneles al buttonPanel principal
+        buttonPanel.add(leftButtonPanel, BorderLayout.WEST);
+        buttonPanel.add(rightButtonPanel, BorderLayout.EAST);
 
         panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        panel.add(filterPanel, BorderLayout.NORTH);
+
+        tablePanel = new JPanel(new BorderLayout());
+        
+        String[] columnNames = {"ID Legal", "Nom", "Cognom", "Sexe", "Data Naixement", "Edat", "Categoria", "Fi Revisió Mèdica"};
+        tableModel = new DefaultTableModel(columnNames, 0);
+        table = new JTable(tableModel);
+        table.setPreferredScrollableViewportSize(new Dimension(300, 200));
+        table.setFillsViewportHeight(true);
+        table.setRowHeight(30);
+
+        scrollPane = new JScrollPane(table);
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
+
+        noJugadorsLabel = new JLabel("No existeix cap jugador", SwingConstants.CENTER);
+        noJugadorsLabel.setForeground(Color.RED);
+        noJugadorsLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+        noJugadorsLabel.setVisible(false);
+        
+        panel.add(tablePanel, BorderLayout.CENTER);
 
         carregarJugadors();
 
@@ -148,16 +216,23 @@ public class JugadorsPanel extends JPanel {
         tableModel.setRowCount(0);
         try {
             jugadors = gBD.obtenirLlistaJugador();
-            for (Jugador jugador : jugadors) {
-                Object[] rowData = {
-                    jugador.getIdLegal(),
-                    jugador.getNom(), 
-                    jugador.getCognom(),
-                    jugador.getSexe(),
-                    jugador.getData_naix(),
-                    jugador.getAny_fi_revisio_medica()
-                };
-                tableModel.addRow(rowData);
+            if (jugadors != null && !jugadors.isEmpty()) {
+                ocultarMensajeNoJugadors();
+                for (Jugador jugador : jugadors) {
+                    Object[] rowData = {
+                        jugador.getIdLegal(),
+                        jugador.getNom(), 
+                        jugador.getCognom(),
+                        jugador.getSexe(),
+                        sdf.format(jugador.getData_naix()),
+                        calcularEdad(jugador.getData_naix()),
+                        obtenerCategoria(calcularEdad(jugador.getData_naix())),
+                        jugador.getAny_fi_revisio_medica()
+                    };
+                    tableModel.addRow(rowData);
+                }
+            } else {
+                mostrarMensajeNoJugadors();
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error al carregar els jugadors: " + ex.getMessage(), 
@@ -204,14 +279,35 @@ public class JugadorsPanel extends JPanel {
         }
     }
 
+    private void guardarEstadoFiltros() {
+        lastIdFilter = txtFilterId.getText().trim();
+        lastNomFilter = txtFilterNom.getText().trim();
+        lastDataFilter = txtFilterData.getText().trim();
+        lastCategoria = (Categoria) cmbCategoria.getSelectedItem();
+    }
+
+    private void restaurarFiltros() {
+        txtFilterId.setText(lastIdFilter);
+        txtFilterNom.setText(lastNomFilter);
+        txtFilterData.setText(lastDataFilter);
+        cmbCategoria.setSelectedItem(lastCategoria);
+        
+        // Aplicar los filtros si hay alguno activo
+        if (!lastIdFilter.isEmpty() || !lastNomFilter.isEmpty() || 
+            !lastDataFilter.isEmpty() || lastCategoria != null) {
+            aplicarFiltros();
+        }
+    }
+
     private void showAddPanel() {
+        guardarEstadoFiltros();
         cardLayout.show(mainPanel, "addPanel");
-        carregarJugadors();
     }
 
     private void showModPanel() {
         int selectedRow = table.getSelectedRow();
         if(selectedRow != -1){
+            guardarEstadoFiltros();
             String idLegal = (String) tableModel.getValueAt(selectedRow, 0);
             Jugador jugadorSeleccionado = null;
             
@@ -226,14 +322,47 @@ public class JugadorsPanel extends JPanel {
                 JPanel modPanel = new ModJugadorWindow(gBD, mainPanel, "listPanel", jugadorSeleccionado);
                 mainPanel.add(modPanel, "modPanel");
                 cardLayout.show(mainPanel, "modPanel");
-                carregarJugadors();
             }
         }
     }
 
     public void showListPanel() {
-        carregarJugadors();
-        cardLayout.show(mainPanel, "listPanel");
+        try {
+            // Actualizar la lista de jugadores
+            jugadors = gBD.obtenirLlistaJugador();
+            
+            // Limpiar y actualizar la tabla
+            tableModel.setRowCount(0);
+            if (jugadors != null && !jugadors.isEmpty()) {
+                ocultarMensajeNoJugadors();
+                for (Jugador jugador : jugadors) {
+                    Object[] rowData = {
+                        jugador.getIdLegal(),
+                        jugador.getNom(), 
+                        jugador.getCognom(),
+                        jugador.getSexe(),
+                        sdf.format(jugador.getData_naix()),
+                        calcularEdad(jugador.getData_naix()),
+                        obtenerCategoria(calcularEdad(jugador.getData_naix())),
+                        jugador.getAny_fi_revisio_medica()
+                    };
+                    tableModel.addRow(rowData);
+                }
+            } else {
+                mostrarMensajeNoJugadors();
+            }
+            
+            // Mostrar el panel y restaurar filtros
+            cardLayout.show(mainPanel, "listPanel");
+            restaurarFiltros();
+            
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, 
+                "Error al actualitzar la llista de jugadors: " + ex.getMessage(), 
+                "Error", 
+                JOptionPane.ERROR_MESSAGE);
+            infoError(ex);
+        }
     }
 
     private static void infoError(Throwable aux) {
@@ -258,9 +387,20 @@ public class JugadorsPanel extends JPanel {
     private void cargarCategorias() {
         try {
             List<Categoria> categorias = gBD.obtenirLlistaCategoria();
-            cmbCategoria.addItem(null);
+            cmbCategoria.addItem(null); 
+            
+            int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+            Categoria categoriaActual = null;
+            
             for (Categoria cat : categorias) {
                 cmbCategoria.addItem(cat);
+                if (cat.getEdat_minima() <= currentYear && cat.getEdat_maxima() >= currentYear) {
+                    categoriaActual = cat;
+                }
+            }
+            
+            if (categoriaActual != null) {
+                cmbCategoria.setSelectedItem(categoriaActual);
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error al carregar les categories: " + ex.getMessage(),
@@ -310,10 +450,18 @@ public class JugadorsPanel extends JPanel {
         }
 
         tableModel.setRowCount(0);
+        boolean hayResultados = false;
         for (Jugador jugador : jugadors) {
             if (cumpleFiltros(jugador, filtroId, filtroNom, selectedCategoria, filtroData)) {
                 actualizarFilaTabla(jugador);
+                hayResultados = true;
             }
+        }
+
+        if (!hayResultados) {
+            mostrarMensajeNoJugadors();
+        } else {
+            ocultarMensajeNoJugadors();
         }
     }
 
@@ -333,8 +481,7 @@ public class JugadorsPanel extends JPanel {
         }
 
         if (!filtroData.isEmpty()) {
-            String fechaJugador = new java.text.SimpleDateFormat("dd/MM/yyyy")
-                .format(jugador.getData_naix());
+            String fechaJugador = sdf.format(jugador.getData_naix());
             matchData = fechaJugador.contains(filtroData);
         }
 
@@ -350,12 +497,17 @@ public class JugadorsPanel extends JPanel {
     }
 
     private void actualizarFilaTabla(Jugador jugador) {
+        int edad = calcularEdad(jugador.getData_naix());
+        String categoria = obtenerCategoria(edad);
+        
         Object[] rowData = {
             jugador.getIdLegal(),
             jugador.getNom(), 
             jugador.getCognom(),
             jugador.getSexe(),
-            jugador.getData_naix(),
+            sdf.format(jugador.getData_naix()),
+            edad,
+            categoria,
             jugador.getAny_fi_revisio_medica()
         };
         tableModel.addRow(rowData);
@@ -364,15 +516,7 @@ public class JugadorsPanel extends JPanel {
     private void actualizarTabla(List<Jugador> jugadorsOrdenados) {
         tableModel.setRowCount(0);
         for (Jugador jugador : jugadorsOrdenados) {
-            Object[] rowData = {
-                jugador.getIdLegal(),
-                jugador.getNom(), 
-                jugador.getCognom(),
-                jugador.getSexe(),
-                jugador.getData_naix(),
-                jugador.getAny_fi_revisio_medica()
-            };
-            tableModel.addRow(rowData);
+            actualizarFilaTabla(jugador);
         }
     }
 
@@ -389,5 +533,36 @@ public class JugadorsPanel extends JPanel {
         return listaJugadores.stream()
             .filter(jugador -> cumpleFiltros(jugador, filtroId, filtroNom, selectedCategoria, filtroData))
             .collect(java.util.stream.Collectors.toList());
+    }
+
+    private void mostrarMensajeNoJugadors() {
+        scrollPane.setVisible(false);
+        if (noJugadorsLabel.getParent() == null) {
+            tablePanel.add(noJugadorsLabel, BorderLayout.CENTER);
+        }
+        noJugadorsLabel.setVisible(true);
+        tablePanel.revalidate();
+        tablePanel.repaint();
+    }
+
+    private void ocultarMensajeNoJugadors() {
+        noJugadorsLabel.setVisible(false);
+        scrollPane.setVisible(true);
+        tablePanel.revalidate();
+        tablePanel.repaint();
+    }
+
+    private String obtenerCategoria(int edad) {
+        try {
+            List<Categoria> categorias = gBD.obtenirLlistaCategoria();
+            for (Categoria cat : categorias) {
+                if (edad >= cat.getEdat_minima() && edad <= cat.getEdat_maxima()) {
+                    return cat.getCategoria();
+                }
+            }
+            return "Sense categoria";
+        } catch (Exception ex) {
+            return "Error";
+        }
     }
 }

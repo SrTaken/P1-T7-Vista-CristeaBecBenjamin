@@ -22,7 +22,7 @@ import org.milaifontanals.club.Usuari;
 
 /**
  *
- * @author isard
+ * @author Benjamin Cristea
  */
 public class IniciarPrograma {
     public static void main(String[] args) {

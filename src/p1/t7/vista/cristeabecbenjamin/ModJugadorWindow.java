@@ -40,10 +40,19 @@ public class ModJugadorWindow extends JPanel {
     private JTextField txtCp;
     private JPanel parentContainer;
     private String mainPanelName;
-    private Color originalBackgroundColor;
+    private Color originalBackgroundColor = new Color(255,255,255);
     private SimpleDateFormat dateFormat;
     private JLabel lblImagePreview;
     private final int IMAGE_PREVIEW_SIZE = 150;
+    private JLabel lblErrorIdLegal;
+    private JLabel lblErrorNom;
+    private JLabel lblErrorCognom;
+    private JLabel lblErrorIban;
+    private JLabel lblErrorAdresa;
+    private JLabel lblErrorPoblacio;
+    private JLabel lblErrorCp;
+    private JLabel lblErrorFoto;
+    private JLabel lblErrorRevisio;
 
     public ModJugadorWindow(IClubOracleBD gBD, JPanel parentContainer, String mainPanelName, Jugador selectedJugador) {
         this.parentContainer = parentContainer;
@@ -52,13 +61,12 @@ public class ModJugadorWindow extends JPanel {
         
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        
+
         JPanel mainPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        //datos personales
         JPanel leftPanel = new JPanel(new GridBagLayout());
         leftPanel.setBorder(BorderFactory.createTitledBorder("Datos Personales"));
         
@@ -66,7 +74,6 @@ public class ModJugadorWindow extends JPanel {
         addField(leftPanel, "Nom:", txtNom = new JTextField(20), 1);
         addField(leftPanel, "Cognom:", txtCognom = new JTextField(20), 2);
         
-        //sexo
         JPanel sexePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         sexeGroup = new ButtonGroup();
         JRadioButton rbHome = new JRadioButton("Home");
@@ -77,7 +84,6 @@ public class ModJugadorWindow extends JPanel {
         sexePanel.add(rbDona);
         addComponent(leftPanel, "Sexe:", sexePanel, 3);
         
-        //spinner data
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.YEAR, -100); 
         Date earliestDate = calendar.getTime();
@@ -99,7 +105,6 @@ public class ModJugadorWindow extends JPanel {
         
         addComponent(leftPanel, "Data Naixement:", dateSpinner, 4);
 
-        // direccion y otros datos
         JPanel rightPanel = new JPanel(new GridBagLayout());
         rightPanel.setBorder(BorderFactory.createTitledBorder("Dirección y Datos Adicionales"));
         
@@ -109,7 +114,6 @@ public class ModJugadorWindow extends JPanel {
         addField(rightPanel, "Codi Postal:", txtCp = new JTextField(10), 3);
         addField(rightPanel, "Any Revisió Mèdica:", txtAnyRevisioMedica = new JTextField(10), 4);
 
-        //img
         JPanel imagePanel = new JPanel(new BorderLayout(5, 5));
         imagePanel.setBorder(BorderFactory.createTitledBorder("Foto"));
         
@@ -148,8 +152,14 @@ public class ModJugadorWindow extends JPanel {
                 rbDona.setSelected(true);
             }
             
+            for (Enumeration<AbstractButton> buttons = sexeGroup.getElements(); buttons.hasMoreElements();) {
+                AbstractButton button = buttons.nextElement();
+                button.setEnabled(false);
+            }
+            
             if (selectedJugador.getData_naix() != null) {
                 dateSpinner.setValue(selectedJugador.getData_naix());
+                dateSpinner.setEnabled(false);
             }
             txtIban.setText(selectedJugador.getIban());
             txtAdresa.setText(selectedJugador.getAdresa());
@@ -346,6 +356,7 @@ public class ModJugadorWindow extends JPanel {
                 "Jugador guardat correctament!", 
                 "Èxit", 
                 JOptionPane.INFORMATION_MESSAGE);
+            limpiarCampos();
             volverAlPanelPrincipal();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, 
@@ -367,6 +378,7 @@ public class ModJugadorWindow extends JPanel {
     }
 
     private void volverAlPanelPrincipal() {
+        limpiarCampos();
         CardLayout layout = (CardLayout) parentContainer.getLayout();
         layout.show(parentContainer, mainPanelName);
     }
@@ -447,6 +459,139 @@ public class ModJugadorWindow extends JPanel {
         
         gbc.gridx = 1;
         panel.add(field, gbc);
+        
+        JLabel errorLabel = new JLabel("");
+        errorLabel.setForeground(Color.RED);
+        errorLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        gbc.gridx = 2;
+        panel.add(errorLabel, gbc);
+        
+        if (field == txtIdLegal) lblErrorIdLegal = errorLabel;
+        else if (field == txtNom) lblErrorNom = errorLabel;
+        else if (field == txtCognom) lblErrorCognom = errorLabel;
+        else if (field == txtIban) lblErrorIban = errorLabel;
+        else if (field == txtAdresa) lblErrorAdresa = errorLabel;
+        else if (field == txtPoblacio) lblErrorPoblacio = errorLabel;
+        else if (field == txtCp) lblErrorCp = errorLabel;
+        else if (field == txtFoto) lblErrorFoto = errorLabel;
+        else if (field == txtAnyRevisioMedica) lblErrorRevisio = errorLabel;
+        
+        field.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                validarCampo(field);
+            }
+        });
+    }
+
+    private void validarCampo(JTextField field) {
+        if (field == txtIdLegal) {
+            String idLegal = field.getText().trim().toUpperCase();
+            field.setText(idLegal);
+            
+            if (idLegal.isEmpty()) {
+                mostrarError(lblErrorIdLegal, "Camp obligatori");
+                field.setBackground(new Color(255, 200, 200));
+            } else if (idLegal.length() != 9) {
+                mostrarError(lblErrorIdLegal, "Ha de tenir 9 caràcters");
+                field.setBackground(new Color(255, 200, 200));
+            } else if (!Jugador.NifValidator(idLegal)) {
+                mostrarError(lblErrorIdLegal, "NIF/NIE no vàlid");
+                field.setBackground(new Color(255, 200, 200));
+            } else {
+                ocultarError(lblErrorIdLegal);
+                field.setBackground(originalBackgroundColor);
+            }
+        } else if (field == txtNom || field == txtCognom) {
+            if (field.getText().trim().length() < 3) {
+                mostrarError(field == txtNom ? lblErrorNom : lblErrorCognom, 
+                    "Ha de tenir almenys 3 caràcters");
+                field.setBackground(new Color(255, 200, 200));
+            } else {
+                ocultarError(field == txtNom ? lblErrorNom : lblErrorCognom);
+                field.setBackground(originalBackgroundColor);
+            }
+        } else if (field == txtIban) {
+            if (!Jugador.IbanValidator(field.getText().trim())) {
+                mostrarError(lblErrorIban, "IBAN no vàlid");
+                field.setBackground(new Color(255, 200, 200));
+            } else {
+                ocultarError(lblErrorIban);
+                field.setBackground(originalBackgroundColor);
+            }
+        } else if (field == txtAdresa) {
+            if (field.getText().trim().length() < 8) {
+                mostrarError(lblErrorAdresa, "L'adreça ha de tenir almenys 8 caràcters");
+                field.setBackground(new Color(255, 200, 200));
+            } else {
+                ocultarError(lblErrorAdresa);
+                field.setBackground(originalBackgroundColor);
+            }
+        } else if (field == txtPoblacio) {
+            if (field.getText().trim().isEmpty()) {
+                mostrarError(lblErrorPoblacio, "La població és obligatòria");
+                field.setBackground(new Color(255, 200, 200));
+            } else {
+                ocultarError(lblErrorPoblacio);
+                field.setBackground(originalBackgroundColor);
+            }
+        } else if (field == txtCp) {
+            try {
+                int cp = Integer.parseInt(field.getText().trim());
+                if (cp < 1000 || cp > 99999) {
+                    mostrarError(lblErrorCp, "El CP ha de tenir 5 dígits");
+                    field.setBackground(new Color(255, 200, 200));
+                } else {
+                    ocultarError(lblErrorCp);
+                    field.setBackground(originalBackgroundColor);
+                }
+            } catch (NumberFormatException e) {
+                mostrarError(lblErrorCp, "El CP ha de ser numèric");
+                field.setBackground(new Color(255, 200, 200));
+            }
+        } else if (field == txtAnyRevisioMedica) {
+            try {
+                int any = Integer.parseInt(field.getText().trim());
+                Calendar cal = Calendar.getInstance();
+                if (any < cal.get(Calendar.YEAR)) {
+                    mostrarError(lblErrorRevisio, "L'any ha de ser igual o superior a l'actual");
+                    field.setBackground(new Color(255, 200, 200));
+                } else {
+                    ocultarError(lblErrorRevisio);
+                    field.setBackground(originalBackgroundColor);
+                }
+            } catch (NumberFormatException e) {
+                mostrarError(lblErrorRevisio, "L'any ha de ser numèric");
+                field.setBackground(new Color(255, 200, 200));
+            }
+        }
+    }
+
+    private void mostrarError(JLabel errorLabel, String mensaje) {
+        if (errorLabel != null) {
+            errorLabel.setText(mensaje);
+            errorLabel.setForeground(Color.RED);
+            errorLabel.setVisible(true);
+        }
+    }
+
+    private void ocultarError(JLabel errorLabel) {
+        if (errorLabel != null) {
+            errorLabel.setText("");
+            errorLabel.setVisible(false);
+        }
+    }
+
+    private void limpiarErrores() {
+        JLabel[] errorLabels = {lblErrorIdLegal, lblErrorNom, lblErrorCognom, 
+            lblErrorIban, lblErrorAdresa, lblErrorPoblacio, lblErrorCp, 
+            lblErrorFoto, lblErrorRevisio};
+        
+        for (JLabel label : errorLabels) {
+            if (label != null) {
+                label.setText("");
+            }
+        }
     }
 
     private void addComponent(JPanel panel, String label, JComponent component, int y) {
@@ -460,5 +605,34 @@ public class ModJugadorWindow extends JPanel {
         
         gbc.gridx = 1;
         panel.add(component, gbc);
+    }
+
+    private void limpiarCampos() {
+        txtIdLegal.setText("");
+        txtNom.setText("");
+        txtCognom.setText("");
+        sexeGroup.clearSelection();
+        
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.YEAR, -18);
+        dateSpinner.setValue(calendar.getTime());
+        
+        txtIban.setText("");
+        txtAdresa.setText("");
+        txtPoblacio.setText("");
+        txtCp.setText("");
+        txtFoto.setText("");
+        txtAnyRevisioMedica.setText("");
+        
+        lblImagePreview.setIcon(null);
+        lblImagePreview.setText("No hi ha imatge");
+        
+        Component[] campos = {txtIdLegal, txtNom, txtCognom, txtIban, 
+            txtAdresa, txtPoblacio, txtCp, txtFoto, txtAnyRevisioMedica};
+        for (Component campo : campos) {
+            campo.setBackground(originalBackgroundColor);
+        }
+        
+        limpiarErrores();
     }
 } 
