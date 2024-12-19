@@ -50,7 +50,7 @@ public class IniciarPrograma {
         frame.setVisible(true);
 
         if (args.length == 0) {
-            lblMensaje.setText("<html><center>Error: Cal passar el nom de la classe<br>que dona la persistència com a argument</center></html>");
+            lblMensaje.setText("<html><center>Error: Cal passar el nom de la classe<br />que dona la persistència com a argument</center></html>");
             progressBar.setIndeterminate(false); // Detener barra
             return;
         }
@@ -68,12 +68,6 @@ public class IniciarPrograma {
 
                 gBD[0] = (IClubOracleBD) Class.forName(nomClassePersistencia).newInstance();
 
-                SwingUtilities.invokeLater(() -> {
-                    lblMensaje.setText("Connexió establerta amb èxit!");
-                    progressBar.setIndeterminate(false);
-                    progressBar.setValue(100);
-                });
-                
                 frame.dispose();
 
                 LoginWindow loginWindow = new LoginWindow(gBD[0]);

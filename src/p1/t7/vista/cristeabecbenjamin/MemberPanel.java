@@ -24,6 +24,30 @@ public class MemberPanel extends JPanel {
         this.equip = equip;
         setupUI();
         carregarDades();
+        closeVentana();
+    }
+
+    private void closeVentana() {
+        addAncestorListener(new javax.swing.event.AncestorListener() {
+            @Override
+            public void ancestorRemoved(javax.swing.event.AncestorEvent event) {
+                try {
+                    gBD.desferCanvis();
+                    //System.out.println("ROLLBACK");
+                }catch (GestorBDClub ex) {
+                    JOptionPane.showMessageDialog(MemberPanel.this,
+                            "Error al desfer els canvis: " + ex.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+
+            @Override
+            public void ancestorAdded(javax.swing.event.AncestorEvent event) {}
+
+            @Override
+            public void ancestorMoved(javax.swing.event.AncestorEvent event) {}
+        });
     }
     
     private void setupUI() {
@@ -36,6 +60,7 @@ public class MemberPanel extends JPanel {
         
         String[] columnasDisponibles = {"ID", "Nom", "Cognoms", "Edat", "Titular"};
         modelJugadorsDisponibles = new DefaultTableModel(columnasDisponibles, 0) {
+            //Esto es para el checkbox
             @Override
             public Class<?> getColumnClass(int column) {
                 return column == 4 ? Boolean.class : Object.class;
@@ -271,14 +296,17 @@ public class MemberPanel extends JPanel {
     
     private boolean compleixRequisits(Jugador j) {
          if ((equip.getTipus() == Tipus.D && j.getSexe() != Sexe.D) || 
-            (equip.getTipus() == Tipus.H && j.getSexe() != Sexe.H)) {
+            (equip.getTipus() == Tipus.H && j.getSexe() != Sexe.H)) 
             return false;
-        }
+        
         int edat = calcularEdat(j);
         int edatMinima = equip.getCategoria().getEdat_minima();
         int edatMaxima = equip.getCategoria().getEdat_maxima();
         
-        return !(edat >= edatMaxima);
+        
+        
+        //return !(edat >= edatMaxima);
+        return edat >= (edatMinima - 2) && edat < edatMaxima;
     }
     
     private int calcularEdat(Jugador j) {

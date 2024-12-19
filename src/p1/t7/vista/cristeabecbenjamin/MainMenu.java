@@ -19,7 +19,9 @@ public class MainMenu extends JFrame {
         setTitle("Menú Principal");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setExtendedState(Frame.MAXIMIZED_BOTH);
+        //setSize(900, 600);
         setLocationRelativeTo(null);
+        setResizable(false);
         
         UIManager.put("Button.font", new Font("SansSerif", Font.BOLD, 14));
         UIManager.put("Panel.background", Color.LIGHT_GRAY);

@@ -139,13 +139,13 @@ public class ModEquipWindow extends JPanel {
         //Load equip
         if (selectedEquip != null) {
             txtNom.setText(selectedEquip.getNom());
-
+            
             for (Enumeration<AbstractButton> buttons = tipusGroup.getElements(); buttons.hasMoreElements();) {
                 AbstractButton button = buttons.nextElement();
                 if (button.getText().equals(selectedEquip.getTipus().getDisplayName())) {
                     button.setSelected(true);
                 }
-                button.setEnabled(false);
+                button.setEnabled(false);  
             }
 
             Categoria categoriaSeleccionada = selectedEquip.getCategoria();
@@ -156,7 +156,7 @@ public class ModEquipWindow extends JPanel {
                     break;
                 }
             }
-            cmbCategoria.setEnabled(false);
+            cmbCategoria.setEnabled(false);  
 
             Temporada temporadaSeleccionada = selectedEquip.getTemporada();
             for (int i = 0; i < cmbTemporada.getItemCount(); i++) {
@@ -166,7 +166,7 @@ public class ModEquipWindow extends JPanel {
                     break;
                 }
             }
-            cmbTemporada.setEnabled(false);
+            cmbTemporada.setEnabled(false);  
         }
 
         txtNom.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -237,8 +237,15 @@ public class ModEquipWindow extends JPanel {
             Categoria c = (Categoria) cmbCategoria.getSelectedItem();
             Temporada temp = (Temporada) cmbTemporada.getSelectedItem();
             
-            Equip e = new Equip(nom, t, c, temp);
-            gBD.afegirEquip(e);
+            if(selectedEquip != null){
+                selectedEquip.setNom(nom);
+                gBD.modificarEquip(selectedEquip);
+            }else{
+                Equip e = new Equip(nom, t, c, temp);
+                gBD.afegirEquip(e);
+            }
+            
+            
             gBD.confirmarCanvis();
                     
             JOptionPane.showMessageDialog(this, "Equip guardat correctament!", "Èxit", JOptionPane.INFORMATION_MESSAGE);
